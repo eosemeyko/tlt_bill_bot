@@ -1,6 +1,6 @@
 _ = require 'lodash'
 debug = require('debug')('tltbill_bot:callback_query')
-checkUser = require './middleware/CheckUser'
+checkUser = require './middleware/checkUser'
 events = require './models/events'
 info = require './models/information'
 
