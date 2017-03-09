@@ -25,23 +25,32 @@ module.exports = (listen) ->
     if !events[arg[0]]
       return listen.editMessageText('Извини незнаю такого!', editMsgID)
 
+    # Отмена действия (Очистка сообщения)
+    if arg[0] == 'cancel'
+      return listen.editMessageText('Отмена действия', editMsgID)
+
     # Запоминаем событие
     event = events[arg[0]]
 
-    # Проверяем количество аргументов
-    if arg.length < event.args
-      return listen.editMessageText('Что-то не так!', editMsgID)
-
     # Удаляем наименование события из аргументов
     delete arg[0]
+    arg = _.compact(arg)
+
+    # Проверяем количество аргументов
+    if arg.length < event.args || 0
+      return listen.editMessageText('Что-то не так!', editMsgID)
+
+    # Если нет дальнейших действий стопим
+    if !event.next
+      return
 
     # Если нет запроса стопим или выводим ошибку
-    if event.next and !event.next.req
+    if !event.next.req
       return listen.editMessageText('Непойму что делать дальше!', editMsgID)
 
     # Если это последний запрос пишем и отвечаем конечным результатом
     if event.next.end
-      return info[event.next.req](_.compact(arg),msg.chat.id)
+      return info[event.next.req](arg,msg.chat.id)
         .then (data) ->
           if data
             # Отправляет ответ в режиме Markdown text
@@ -54,7 +63,7 @@ module.exports = (listen) ->
           listen.editMessageText('Ошибка запроса', editMsgID)
 
     # Выполняем запрос c кнопками для ответа
-    info[event.next.req](_.compact(arg),msg.chat.id)
+    info[event.next.req](arg,msg.chat.id)
       .then (data) ->
         if data
           # Message text
