@@ -2,7 +2,6 @@ _ = require 'lodash'
 debug = require('debug')('tltbill_bot:callback_query')
 checkUser = require './middleware/checkUser'
 events = require './models/events'
-info = require './models/information'
 
 module.exports = (listen) ->
   listen.on 'callback_query', (data) ->
@@ -31,6 +30,7 @@ module.exports = (listen) ->
 
     # Запоминаем событие
     event = events[arg[0]]
+    req = event.next.req
 
     # Удаляем наименование события из аргументов
     delete arg[0]
@@ -45,12 +45,12 @@ module.exports = (listen) ->
       return
 
     # Если нет запроса стопим или выводим ошибку
-    if !event.next.req
+    if !req
       return listen.editMessageText('Непойму что делать дальше!', editMsgID)
 
     # Если это последний запрос пишем и отвечаем конечным результатом
     if event.next.end
-      return info[event.next.req](arg,msg.chat.id)
+      return req(arg,msg.chat.id)
         .then (data) ->
           if data
             # Отправляет ответ в режиме Markdown text
@@ -63,7 +63,7 @@ module.exports = (listen) ->
           listen.editMessageText('Ошибка запроса', editMsgID)
 
     # Выполняем запрос c кнопками для ответа
-    info[event.next.req](arg,msg.chat.id)
+    req(arg,msg.chat.id)
       .then (data) ->
         if data
           # Message text
