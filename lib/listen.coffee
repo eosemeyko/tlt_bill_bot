@@ -41,11 +41,15 @@ module.exports = (bot) ->
 
       # Only two arguments
       if args.length < 2
-        return bot.sendMessage chatId, 'Недостаточно аргументов!'
+        return bot.sendMessage chatId, 'Нехватает значений!'
+
+      # Только числовые значения
+      if _.isNaN(Number(args[0])) or _.isNaN(Number(args[1]))
+        return bot.sendMessage chatId, 'Принимаю только числа!'
 
       # Only +
-      if args[1] < 0
-        return bot.sendMessage chatId, 'Баланс может быть только положительный!'
+      if args[1] and args[1] < 0
+        return bot.sendMessage chatId, 'Сумма только положительная!'
 
       GetInfo bot, chatId, 'fetchUserBalance', 'Пополнение на сумму *'+args[1]+ '*\n', args
     return
