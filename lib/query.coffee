@@ -18,32 +18,26 @@ module.exports = (listen) ->
     if !checkUser msg.chat.id
       return
 
-    # Если нет такого события
-    if !events[msg.text]
+    # Разбираем аргументы
+    arg = data.data.split(' ')
+
+    # Если такого события не найдено отвечаем
+    if !events[arg[0]]
       return listen.editMessageText('Извини незнаю такого!', editMsgID)
 
     # Запоминаем событие
-    event = events[msg.text]
-    # Разбираем аргументы
-    arg = data.data.split(' ')
+    event = events[arg[0]]
 
     # Проверяем количество аргументов
     if arg.length < event.args
       return listen.editMessageText('Что-то не так!', editMsgID)
 
-    # Если такого события не найдено отвечаем
-    if event.data != arg[0]
-      return listen.editMessageText('Что-то пошло не так!', editMsgID)
     # Удаляем наименование события из аргументов
     delete arg[0]
 
-    # Если нет следующего запроса стопим
-    if !event.next
-      return
-
     # Если нет запроса стопим или выводим ошибку
-    if !event.next.req
-      return listen.editMessageText('Непойму что делать дальше!)', editMsgID)
+    if event.next and !event.next.req
+      return listen.editMessageText('Непойму что делать дальше!', editMsgID)
 
     # Если это последний запрос пишем и отвечаем конечным результатом
     if event.next.end
