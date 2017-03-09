@@ -22,7 +22,9 @@ module.exports = {
                 callback_data: 'select_lane '+value.laneid
               callback()
             , ->
-              resolve array
+              resolve(
+                buttons: array
+              )
           else resolve()
         .catch (err) ->
           reject err
@@ -101,6 +103,48 @@ module.exports = {
               callback()
             ,() ->
               resolve _.join(result, '\n-----------------------------------------\n')
+          else resolve()
+        .catch (err) ->
+          reject err
+      return
+
+  ###
+  # Fetch User Payment
+  # @param {Array} args - Arguments
+  # @return {Promise}
+  ###
+  fetchUserBalance: (args) ->
+    new Promise (resolve, reject) ->
+      users = "SELECT user,deposit,NULL AS status FROM `users` WHERE `uid` =" + args[0]
+      usersblock =  "SELECT user,deposit,'otkl' as status FROM `usersblok` WHERE `uid` =" + args[0]
+      usersdel = "SELECT user,deposit,'del' as status FROM `usersdel` WHERE `uid` =" + args[0]
+      db.query(users+ ' UNION ' +usersblock+ ' UNION ' +usersdel)
+        .then (data) ->
+          if data
+            user = data[0]
+            deposit = Math.floor(user.deposit)
+            sum = parseInt(deposit) + parseInt(args[1])
+            if user.status
+              if user.status == 'otkl'
+                status = 'Статус: *Отключен*\n'
+              if user.status == 'del'
+                status = 'Статус: *Удален*\n'
+            else status = ''
+            result = status+ 'UID: *' +args[0]+ '*\nЛогин: *' +user.user+ '*\nБаланс до: *' +deposit+ ' руб*\nБаланс после: *' +sum+ '* руб'
+            array = [
+              {
+                text: 'Выполнить'
+                callback_data: 'payment ' +args[0]+ ' ' +args[1]
+              }
+              {
+                text: 'Отменить'
+                callback_data: 'cancel'
+              }
+            ]
+            resolve(
+              result: result
+              buttons: array
+            )
           else resolve()
         .catch (err) ->
           reject err

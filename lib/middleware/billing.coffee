@@ -110,6 +110,13 @@ module.exports = (ChatID) ->
           self.accessToken = response.headers['set-cookie'][0].replace('; path=/', '')
           return resolve()
 
+        # Если нет ответа
+        if !body
+          return reject()
+
+        # Console body
+        debug body
+
         # Parse XML body
         parser.parseString body, (err, result) ->
           if err
@@ -121,4 +128,17 @@ module.exports = (ChatID) ->
   {
     # Token for Authorize
     accessToken: memory.getToken ChatID
+
+    ###
+    # Pay User
+    # @param uid
+    # @param deposit
+    ###
+    PaymentUser: (uid,deposit) ->
+     _ensureAccessToken().then ->
+       _sendRequest('POST', '/ajax/users/paymentflex', {
+         uid: uid
+         deposit: deposit
+         prim2: 'Оплачено'
+      })
   }

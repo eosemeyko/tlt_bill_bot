@@ -19,7 +19,7 @@ module.exports = (bot) ->
       data =
         ['/поиск']
 
-      bot.sendMessage chatId, 'Приветсвую!', reply_markup:
+      bot.sendMessage chatId, 'Приветствую!', reply_markup:
         keyboard: _.chunk(data)
         one_time_keyboard: true
     return
@@ -29,28 +29,52 @@ module.exports = (bot) ->
     chatId = msg.chat.id
 
     if checkUser chatId
-      Request bot, chatId, 'fetchLanes', 'Выберите улицу'
+      GetInfo bot, chatId, 'fetchLanes', 'Выберите улицу'
     return
 
+  # Payment User  [UID, sum]
+  bot.onText /\/оп (.+)/, (msg, match) ->
+    chatId = msg.chat.id
+
+    if checkUser chatId
+      args = match[1].split(' ')
+
+      # Only two arguments
+      if args.length < 2
+        return bot.sendMessage chatId, 'Недостаточно аргументов!'
+
+      # Only +
+      if args[1] < 0
+        return bot.sendMessage chatId, 'Баланс может быть только положительный!'
+
+      GetInfo bot, chatId, 'fetchUserBalance', 'Пополнение на сумму *'+args[1]+ '*\n', args
+    return
+
+  # Show listen message
   bot.on 'message', (data) ->
     debug data
     return
   return
 
 ###
-# Request Information
+# Request with buttons for reply
 # @param bot
 # @param chatId
-# @param {string} req - Information Model
+# @param {string} req - Request api model
 # @param {string} text - New Message Text
+# @param args - Arguments
 ###
-Request = (bot,chatId,req,text) ->
-  info[req]()
+GetInfo = (bot,chatId,req,text,args) ->
+  info[req](args)
     .then (data) ->
       if data
-        bot.sendMessage chatId, text, reply_markup:
-          inline_keyboard: _.chunk(data)
-          one_time_keyboard: true
+        text2 = if data.result then data.result else ''
+        buttons = if data.buttons then _.chunk(data.buttons) else null
+        bot.sendMessage chatId, text + text2,
+          reply_markup:
+            inline_keyboard: buttons
+            one_time_keyboard: true
+          parse_mode: "Markdown"
       else bot.sendMessage chatId, 'Пустой ответ'
 
     .catch (err) ->

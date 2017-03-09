@@ -1,4 +1,5 @@
 information = require './information'
+actions = require './actions'
 
 module.exports =
   # Select lane (laneid)
@@ -13,4 +14,11 @@ module.exports =
     args: 1
     next:
       req: information.fetchHouseUsers
+      end: true
+
+  # Payment User
+  payment:
+    args: 2
+    next:
+      req: actions.PaymentUser
       end: true
