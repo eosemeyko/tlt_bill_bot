@@ -14,7 +14,7 @@ module.exports = {
     new Promise (resolve, reject) ->
       db.query('SELECT * FROM `lanes`')
         .then (data) ->
-          if data
+          if data.length > 0
             array = []
             async.each data, (value,callback) ->
               array.push
@@ -40,7 +40,7 @@ module.exports = {
     new Promise (resolve, reject) ->
       db.query('SELECT * FROM `lanes_houses` WHERE `laneid`=' + lane_id[0])
         .then (data) ->
-          if data
+          if data.length > 0
             array = []
             async.each data, (value,callback) ->
               array.push
@@ -72,7 +72,7 @@ module.exports = {
 
       db.query(users + ' UNION ' + users_block + ' UNION ' + users_del)
         .then (data) ->
-          if data
+          if data.length > 0
             result = []
             async.each data, (value,callback) ->
               # DEPOSIT
@@ -120,16 +120,19 @@ module.exports = {
       usersdel = "SELECT user,deposit,'del' as status FROM `usersdel` WHERE `uid` =" + args[0]
       db.query(users+ ' UNION ' +usersblock+ ' UNION ' +usersdel)
         .then (data) ->
-          if data
+          if data.length > 0
             user = data[0]
             deposit = Math.floor(user.deposit)
             sum = parseInt(deposit) + parseInt(args[1])
+            # STATUS
             if user.status
               if user.status == 'otkl'
                 status = 'Статус: *Отключен*\n'
               if user.status == 'del'
                 status = 'Статус: *Удален*\n'
             else status = ''
+
+            # RESULT COMPILE
             result = status+ 'UID: *' +args[0]+ '*\nЛогин: *' +user.user+ '*\nБаланс до: *' +deposit+ ' руб*\nБаланс после: *' +sum+ '* руб'
             array = [
               {
@@ -144,6 +147,63 @@ module.exports = {
             resolve(
               result: result
               buttons: array
+            )
+          else resolve()
+        .catch (err) ->
+          reject err
+      return
+
+  ###
+  # Fetch User
+  # @param args - Arguments
+  # @return {Promise}
+  ###
+  fetchUser: (args) ->
+    new Promise (resolve, reject) ->
+      fio = '%' +args+ '%'
+      users = "SELECT `users`.`uid`,`users`.`user`,`users`.`deposit`,NULL AS status,`users`.`fio`,
+        if(`inetonline`.`uid`,'ON','OFF') AS `online`,
+        if(`inetonline`.`uid`,NULL,(SELECT `acctstoptime` FROM `radacct` WHERE `radacct`.`uid` = `users`.`uid` ORDER BY `radacctid` DESC LIMIT 1)) AS `acctstoptime`
+        FROM `users` left join `inetonline` on(`users`.`uid` = `inetonline`.`uid`)
+        WHERE `users`.`uid`= '" +args+ "' OR `users`.`user` LIKE '" +args+ "' OR `users`.`fio` LIKE '" +fio+ "' LIMIT 1"
+      usersblock = "SELECT uid,user,deposit,'otkl' as status,fio,'OFF' AS `online`,NULL AS `acctstoptime` FROM `usersblok` WHERE `uid`= '" +args+ "' OR `user` LIKE '" +args+ "' OR `fio` LIKE '"+fio+ "' LIMIT 1"
+      usersdel = "SELECT uid,user,deposit,'del' as status,fio,'OFF' AS `online`,NULL AS `acctstoptime` FROM `usersdel` WHERE `uid`= '" +args+ "' OR `user` LIKE '" +args+ "' OR `fio` LIKE '" +fio+ "' LIMIT 1"
+      db.query(users+ ' UNION ' +usersblock+ ' UNION ' +usersdel)
+        .then (data) ->
+          if data.length > 0
+            user = data[0]
+            deposit = Math.floor(user.deposit)
+
+            # STATUS
+            if user.status
+              if user.status == 'otkl'
+                status = 'Статус: *Отключен*\n'
+              if user.status == 'del'
+                status = 'Статус: *Удален*\n'
+            else status = ''
+
+            # FIO
+            if user.fio
+              fio = '\nФИО: *' + user.fio + '*'
+            else fio = ''
+
+            # Online
+            if user.online == 'ON'
+              online = 'ДА'
+            else online = 'НЕТ'
+
+            # Connect
+            if user.online == 'OFF' and user.acctstoptime
+              date = dateFormat(user.acctstoptime, "d/m/yy HH:MM")
+              connect = '\nКоннект: *' +date+ '*'
+            else connect = ''
+
+            # RESULT COMPILE
+            result = 'UID: *' +user.uid+ '*\n' +status+ 'Логин: *' +user.user+ '*' +fio+ '\nБаланс: *' +deposit+ ' руб*\nОнлайн: *' +online+ '*' +connect
+
+            resolve(
+              result: result
+              buttons: []
             )
           else resolve()
         .catch (err) ->

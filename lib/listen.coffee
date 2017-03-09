@@ -22,6 +22,7 @@ module.exports = (bot) ->
       bot.sendMessage chatId, 'Приветствую!', reply_markup:
         keyboard: _.chunk(data)
         one_time_keyboard: true
+    else bot.sendMessage chatId, 'С посторонними не разговариваю...'
     return
 
   # Search Users the Home
@@ -53,6 +54,15 @@ module.exports = (bot) ->
 
       GetInfo bot, chatId, 'fetchUserBalance', 'Пополнение на сумму *'+args[1]+ '*\n', args
     return
+
+  # Search User [VALUE]
+  bot.onText /\/юз (.+)/, (msg,match) ->
+    chatId = msg.chat.id
+
+    if checkUser chatId
+      GetInfo bot, chatId, 'fetchUser', '*Пользователь*\n', match[1]
+    return
+
 
   # Show listen message
   bot.on 'message', (data) ->
