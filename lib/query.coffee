@@ -20,13 +20,13 @@ module.exports = (listen) ->
     # Разбираем аргументы
     arg = data.data.split(' ')
 
-    # Если такого события не найдено отвечаем
-    if !events[arg[0]]
-      return listen.editMessageText('Извини незнаю такого!', editMsgID)
-
     # Отмена действия (Очистка сообщения)
     if arg[0] == 'cancel'
       return listen.editMessageText('Отмена действия', editMsgID)
+
+    # Если такого события не найдено отвечаем
+    if !events[arg[0]]
+      return listen.editMessageText('Извини незнаю такого!', editMsgID)
 
     # Запоминаем событие
     event = events[arg[0]]
