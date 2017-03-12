@@ -1,8 +1,9 @@
 _ = require 'lodash'
+debug = require('debug')('tltbill_bot:mysql')
 config = require 'config'
 Promise = require 'promise'
 mysql = require 'mysql'
-db = mysql.createConnection config.db
+db = mysql.createPool config.db
 
 module.exports = {
   ###
@@ -14,7 +15,9 @@ module.exports = {
     new Promise (resolve, reject) ->
       db.query request, (err, rows) ->
         if err
-          reject err
+          debug err
+          return reject err
+        debug rows
         resolve rows
         return
       return
