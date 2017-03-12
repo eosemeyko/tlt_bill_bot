@@ -1,5 +1,5 @@
 _ = require 'lodash'
-debug = require('debug')('tltbill:billing')
+debug = require('debug')('tltbill_bot:billing')
 config = require 'config'
 request = require 'request'
 urlJoin = require 'url-join'

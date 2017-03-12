@@ -52,11 +52,13 @@ module.exports = (listen) ->
     if event.next.end
       return req(arg,msg.chat.id)
         .then (data) ->
-          if data
-            # Отправляет ответ в режиме Markdown text
-            editMsgID.parse_mode = "Markdown"
-            listen.editMessageText(data, editMsgID)
-          else listen.editMessageText('Пустой ответ', editMsgID)
+          if _.isEmpty(data)
+            return listen.editMessageText('Пустой ответ', editMsgID)
+
+          # Отправляет ответ в режиме Markdown text
+          editMsgID.parse_mode = "Markdown"
+          listen.editMessageText(data, editMsgID)
+
         .catch (err) ->
           if err
             console.log err
@@ -65,12 +67,13 @@ module.exports = (listen) ->
     # Выполняем запрос c кнопками для ответа
     req(arg,msg.chat.id)
       .then (data) ->
-        if data
-          # Message text
-          listen.editMessageText(event.next.text, editMsgID)
-          # Message button
-          listen.editMessageReplyMarkup({ inline_keyboard: _.chunk(data) }, editMsgID)
-        else listen.editMessageText('Пустой ответ', editMsgID)
+        if _.isEmpty(data)
+          return listen.editMessageText('Пустой ответ', editMsgID)
+
+        # Send Callback Edit Message
+        editMsgID.reply_markup =
+          inline_keyboard: _.chunk(data)
+        listen.editMessageText(event.next.text, editMsgID)
 
       .catch (err) ->
         if err

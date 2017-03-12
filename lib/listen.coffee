@@ -81,15 +81,16 @@ module.exports = (bot) ->
 GetInfo = (bot,chatId,req,text,args) ->
   info[req](args)
     .then (data) ->
-      if data
-        text2 = if data.result then data.result else ''
-        buttons = if data.buttons then _.chunk(data.buttons) else null
-        bot.sendMessage chatId, text + text2,
-          reply_markup:
-            inline_keyboard: buttons
-            one_time_keyboard: true
-          parse_mode: "Markdown"
-      else bot.sendMessage chatId, 'Пустой ответ'
+      if _.isEmpty(data)
+        return bot.sendMessage chatId, 'Пустой ответ'
+
+      text2 = if data.result then data.result else ''
+      buttons = if data.buttons then _.chunk(data.buttons) else null
+      bot.sendMessage chatId, text + text2,
+        reply_markup:
+           inline_keyboard: buttons
+          one_time_keyboard: true
+        parse_mode: "Markdown"
 
     .catch (err) ->
       if err

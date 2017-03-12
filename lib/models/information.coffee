@@ -14,18 +14,20 @@ module.exports = {
     new Promise (resolve, reject) ->
       db.query('SELECT * FROM `lanes`')
         .then (data) ->
-          if data.length > 0
-            array = []
-            async.each data, (value,callback) ->
-              array.push
-                text: value.lane
-                callback_data: 'select_lane '+value.laneid
-              callback()
-            , ->
-              resolve(
-                buttons: array
-              )
-          else resolve()
+          if _.isEmpty(data)
+            return resolve()
+
+          array = []
+          async.each data, (value,callback) ->
+            array.push
+              text: value.lane
+              callback_data: 'select_lane '+value.laneid
+            callback()
+          , ->
+            resolve(
+              buttons: array
+            )
+          return
         .catch (err) ->
           reject err
       return
@@ -40,16 +42,18 @@ module.exports = {
     new Promise (resolve, reject) ->
       db.query('SELECT * FROM `lanes_houses` WHERE `laneid`=' + lane_id[0])
         .then (data) ->
-          if data.length > 0
-            array = []
-            async.each data, (value,callback) ->
-              array.push
-                text: value.house
-                callback_data: 'select_house '+value.houseid
-              callback()
-            ,() ->
-              resolve array
-          else resolve()
+          if _.isEmpty(data)
+            return resolve()
+
+          array = []
+          async.each data, (value,callback) ->
+            array.push
+              text: value.house
+              callback_data: 'select_house '+value.houseid
+            callback()
+          ,() ->
+            resolve array
+          return
         .catch (err) ->
           reject err
       return
@@ -72,38 +76,40 @@ module.exports = {
 
       db.query(users + ' UNION ' + users_block + ' UNION ' + users_del)
         .then (data) ->
-          if data.length > 0
-            result = []
-            async.each data, (value,callback) ->
-              # DEPOSIT
-              deposit = ', Б:*' +Math.floor(value.deposit)+ '*'
-              # ONLINE
-              if value.online
-                online = ', *' +value.online + '*'
-              else online = ''
-              # FIO
-              if value.fio
-                fio = ', Ф:*' + value.fio + '*'
-              else fio = ''
-              # CREDIT
-              if value.credit != 0 and value.credit != 0.00
-                credit = ', Кр:*' +value.credit + '*'
-              else credit = ''
-              # STATUS
-              if value.status != 'norm'
-                status = ', С:*' + value.status + '*'
-              else status = ''
-              # ACT stop date
-              if value.status == 'norm' and value.online == 'OFF' and value.acctstoptime
-                act = ', ' +dateFormat(value.acctstoptime, "d/m/yy HH:MM")
-              else act = ''
+          if _.isEmpty(data)
+            return resolve()
 
-              # Compile
-              result.push('U:*' +value.uid+ '*, Л:*' +value.user+ '*' +fio+deposit+credit+status+online+act)
-              callback()
-            ,() ->
-              resolve _.join(result, '\n-----------------------------------------\n')
-          else resolve()
+          result = []
+          async.each data, (value,callback) ->
+          # DEPOSIT
+            deposit = ', Б:*' +Math.floor(value.deposit)+ '*'
+            # ONLINE
+            if value.online
+              online = ', *' +value.online + '*'
+            else online = ''
+            # FIO
+            if value.fio
+              fio = ', Ф:*' + value.fio + '*'
+            else fio = ''
+            # CREDIT
+            if value.credit != 0 and value.credit != 0.00
+              credit = ', Кр:*' +value.credit + '*'
+            else credit = ''
+            # STATUS
+            if value.status != 'norm'
+              status = ', С:*' + value.status + '*'
+            else status = ''
+            # ACT stop date
+            if value.status == 'norm' and value.online == 'OFF' and value.acctstoptime
+              act = ', ' +dateFormat(value.acctstoptime, "d/m/yy HH:MM")
+            else act = ''
+
+            # Compile
+            result.push('U:*' +value.uid+ '*, Л:*' +value.user+ '*' +fio+deposit+credit+status+online+act)
+            callback()
+          ,() ->
+            resolve _.join(result, '\n-----------------------------------------\n')
+          return
         .catch (err) ->
           reject err
       return
@@ -120,35 +126,34 @@ module.exports = {
       usersdel = "SELECT user,deposit,'del' as status FROM `usersdel` WHERE `uid` =" + args[0]
       db.query(users+ ' UNION ' +usersblock+ ' UNION ' +usersdel)
         .then (data) ->
-          if data.length > 0
-            user = data[0]
-            deposit = Math.floor(user.deposit)
-            sum = parseInt(deposit) + parseInt(args[1])
-            # STATUS
-            if user.status
-              if user.status == 'otkl'
-                status = 'Статус: *Отключен*\n'
-              if user.status == 'del'
-                status = 'Статус: *Удален*\n'
-            else status = ''
+          if _.isEmpty(data)
+            return resolve()
 
-            # RESULT COMPILE
-            result = status+ 'UID: *' +args[0]+ '*\nЛогин: *' +user.user+ '*\nБаланс до: *' +deposit+ ' руб*\nБаланс после: *' +sum+ '* руб'
-            array = [
-              {
-                text: 'Выполнить'
-                callback_data: 'payment ' +args[0]+ ' ' +args[1]
-              }
-              {
-                text: 'Отменить'
-                callback_data: 'cancel'
-              }
-            ]
-            resolve(
-              result: result
-              buttons: array
-            )
-          else resolve()
+          user = data[0]
+          deposit = Math.floor(user.deposit)
+          sum = parseInt(deposit) + parseInt(args[1])
+          # STATUS
+          if user.status
+            text = if user.status == 'otkl' then 'Отключен' else 'Удален'
+            status = 'Статус: *' +text + '*\n'
+          else status = ''
+
+          # RESULT COMPILE
+          result = status+ 'UID: *' +args[0]+ '*\nЛогин: *' +user.user+ '*\nБаланс до: *' +deposit+ ' руб*\nБаланс после: *' +sum+ '* руб'
+          array = [
+            {
+              text: 'Выполнить'
+              callback_data: 'payment ' +args[0]+ ' ' +args[1]
+            }
+            {
+              text: 'Отменить'
+              callback_data: 'cancel'
+            }
+          ]
+          resolve(
+            result: result
+            buttons: array
+          )
         .catch (err) ->
           reject err
       return
@@ -170,42 +175,40 @@ module.exports = {
       usersdel = "SELECT uid,user,deposit,'del' as status,fio,'OFF' AS `online`,NULL AS `acctstoptime` FROM `usersdel` WHERE `uid`= '" +args+ "' OR `user` LIKE '" +args+ "' OR `fio` LIKE '" +fio+ "' LIMIT 1"
       db.query(users+ ' UNION ' +usersblock+ ' UNION ' +usersdel)
         .then (data) ->
-          if data.length > 0
-            user = data[0]
-            deposit = Math.floor(user.deposit)
+          if _.isEmpty(data)
+            return resolve()
+          user = data[0]
+          deposit = Math.floor(user.deposit)
 
-            # STATUS
-            if user.status
-              if user.status == 'otkl'
-                status = 'Статус: *Отключен*\n'
-              if user.status == 'del'
-                status = 'Статус: *Удален*\n'
-            else status = ''
+          # STATUS
+          if user.status
+            text = if user.status == 'otkl' then 'Отключен' else 'Удален'
+            status = 'Статус: *' +text + '*\n'
+          else status = ''
 
-            # FIO
-            if user.fio
-              fio = '\nФИО: *' + user.fio + '*'
-            else fio = ''
+          # FIO
+          if user.fio
+            fio = '\nФИО: *' + user.fio + '*'
+          else fio = ''
 
-            # Online
-            if user.online == 'ON'
-              online = 'ДА'
-            else online = 'НЕТ'
+          # Online
+          if user.online == 'ON'
+            online = 'ДА'
+          else online = 'НЕТ'
 
-            # Connect
-            if user.online == 'OFF' and user.acctstoptime
-              date = dateFormat(user.acctstoptime, "d/m/yy HH:MM")
-              connect = '\nКоннект: *' +date+ '*'
-            else connect = ''
+          # Connect
+          if user.online == 'OFF' and user.acctstoptime
+            date = dateFormat(user.acctstoptime, "d/m/yy HH:MM")
+            connect = '\nКоннект: *' +date+ '*'
+          else connect = ''
 
-            # RESULT COMPILE
-            result = 'UID: *' +user.uid+ '*\n' +status+ 'Логин: *' +user.user+ '*' +fio+ '\nБаланс: *' +deposit+ ' руб*\nОнлайн: *' +online+ '*' +connect
+          # RESULT COMPILE
+          result = 'UID: *' +user.uid+ '*\n' +status+ 'Логин: *' +user.user+ '*' +fio+ '\nБаланс: *' +deposit+ ' руб*\nОнлайн: *' +online+ '*' +connect
 
-            resolve(
-              result: result
-              buttons: []
-            )
-          else resolve()
+          resolve(
+            result: result
+            buttons: []
+          )
         .catch (err) ->
           reject err
       return
