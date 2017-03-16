@@ -52,7 +52,7 @@ module.exports = (ChatID) ->
         .then (data) ->
           _sendRequest('POST', '/ajax/index/authfl', data)
             .then (result) ->
-              if result and result.user and result.user.enable[0] == '1'
+              if result and result.user[0] and result.user[0].enable[0] == '1'
                 return resolve()
 
               self.accessToken = null
@@ -98,7 +98,7 @@ module.exports = (ChatID) ->
       logData = _.extend({}, requestOptions || {})
       if logData.headers
         delete logData.headers
-      debug('Request Billing: ' +requestUri+ ' Options: ' + JSON.stringify(logData))
+      debug(requestUri+ ' Options: ' + JSON.stringify(logData))
 
       request requestUri,requestOptions, (error, response, body) ->
         if error
@@ -114,15 +114,12 @@ module.exports = (ChatID) ->
         if !body
           return reject()
 
-        # Console body
-        debug body
-
         # Parse XML body
-        parser.parseString body, (err, result) ->
+        parser.parseString '<xml>' +body+ '</xml>', (err, result) ->
           if err
             console.log err
             return reject()
-          resolve result
+          resolve result.xml
         return
 
   {

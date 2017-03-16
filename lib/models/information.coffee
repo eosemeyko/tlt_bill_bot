@@ -4,6 +4,7 @@ Promise = require 'promise'
 db = require '../middleware/mysql'
 billing = require '../middleware/billing'
 dateFormat = require 'dateformat'
+debug = require('debug')('tltbill_bot:information')
 
 module.exports = {
   ###
@@ -15,6 +16,7 @@ module.exports = {
       db.query('SELECT * FROM `lanes`')
         .then (data) ->
           if _.isEmpty(data)
+            debug 'fetchLanes:isEmpty'
             return resolve()
 
           array = []
@@ -24,11 +26,13 @@ module.exports = {
               callback_data: 'select_lane '+value.laneid
             callback()
           , ->
+            debug 'fetchLanes:GOOD'
             resolve(
               buttons: array
             )
           return
         .catch (err) ->
+          debug 'fetchLanes:ERROR '+err
           reject err
       return
 
@@ -43,6 +47,7 @@ module.exports = {
       db.query('SELECT * FROM `lanes_houses` WHERE `laneid`=' + lane_id[0])
         .then (data) ->
           if _.isEmpty(data)
+            debug 'fetchHouses:isEmpty'
             return resolve()
 
           array = []
@@ -52,9 +57,11 @@ module.exports = {
               callback_data: 'select_house '+value.houseid
             callback()
           ,() ->
+            debug 'fetchHouses:GOOD'
             resolve array
           return
         .catch (err) ->
+          debug 'fetchHouses:ERROR '+err
           reject err
       return
 
@@ -77,6 +84,7 @@ module.exports = {
       db.query(users + ' UNION ' + users_block + ' UNION ' + users_del)
         .then (data) ->
           if _.isEmpty(data)
+            debug 'fetchHouseUsers:isEmpty'
             return resolve()
 
           result = []
@@ -108,9 +116,11 @@ module.exports = {
             result.push('U:*' +value.uid+ '*, Л:*' +value.user+ '*' +fio+deposit+credit+status+online+act)
             callback()
           ,() ->
+            debug 'fetchHouseUsers:GOOD'
             resolve _.join(result, '\n-----------------------------------------\n')
           return
         .catch (err) ->
+          debug 'fetchHouseUsers:ERROR '+err
           reject err
       return
 
@@ -127,6 +137,7 @@ module.exports = {
       db.query(users+ ' UNION ' +usersblock+ ' UNION ' +usersdel)
         .then (data) ->
           if _.isEmpty(data)
+            debug 'fetchUserBalance:isEmpty'
             return resolve()
 
           user = data[0]
@@ -150,11 +161,13 @@ module.exports = {
               callback_data: 'cancel'
             }
           ]
+          debug 'fetchUserBalance:GOOD'
           resolve(
             result: result
             buttons: array
           )
         .catch (err) ->
+          debug 'fetchUserBalance:ERROR '+err
           reject err
       return
 
@@ -176,6 +189,7 @@ module.exports = {
       db.query(users+ ' UNION ' +usersblock+ ' UNION ' +usersdel)
         .then (data) ->
           if _.isEmpty(data)
+            debug 'fetchUser:isEmpty'
             return resolve()
           user = data[0]
           deposit = Math.floor(user.deposit)
@@ -205,11 +219,12 @@ module.exports = {
           # RESULT COMPILE
           result = 'UID: *' +user.uid+ '*\n' +status+ 'Логин: *' +user.user+ '*' +fio+ '\nБаланс: *' +deposit+ ' руб*\nОнлайн: *' +online+ '*' +connect
 
+          debug 'fetchUser:GOOD'
           resolve(
             result: result
-            buttons: []
           )
         .catch (err) ->
+          debug 'fetchUser:ERROR '+err
           reject err
       return
 }

@@ -14,8 +14,9 @@ module.exports = {
       # args[1] - SUM
       billing(userID).PaymentUser(args[0],args[1])
         .then (data) ->
-          if data and data.ok == '1'
-            resolve 'UID: *' +args[0]+ '*, Успешно пополнено на сумму: *' +args[1]+ '* рублей'
+          if data and data.ok[0] == '1'
+            deposit = Math.floor(data.deposit[0])
+            resolve 'Статус: *Успешно*\nUID: *' +args[0]+ '*\nБаланс: *' +deposit+ ' руб*'
           else reject()
         .catch (err) ->
           reject err

@@ -15,9 +15,9 @@ module.exports = {
     new Promise (resolve, reject) ->
       db.query request, (err, rows) ->
         if err
-          debug err
+          console.log err
           return reject err
-        debug rows
+        debug 'good request'
         resolve rows
         return
       return

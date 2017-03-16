@@ -1,5 +1,5 @@
 _ = require 'lodash'
-debug = require('debug')('tltbill_bot:callback_query')
+debug = require('debug')('tltbill_bot:query')
 checkUser = require './middleware/checkUser'
 events = require './models/events'
 
@@ -19,6 +19,7 @@ module.exports = (listen) ->
 
     # Разбираем аргументы
     arg = data.data.split(' ')
+    debug 'event: ' +arg[0]
 
     # Отмена действия (Очистка сообщения)
     if arg[0] == 'cancel'
@@ -35,6 +36,7 @@ module.exports = (listen) ->
     # Удаляем наименование события из аргументов
     delete arg[0]
     arg = _.compact(arg)
+    debug 'arguments: ' +arg
 
     # Проверяем количество аргументов
     if arg.length < event.args || 0

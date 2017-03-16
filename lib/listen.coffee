@@ -1,5 +1,5 @@
 _ = require 'lodash'
-debug = require('debug')('tltbill_bot:message')
+debug = require('debug')('tltbill_bot:listen')
 checkUser = require './middleware/checkUser'
 buttons = require './query'
 info = require './models/information'
