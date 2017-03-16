@@ -131,9 +131,9 @@ module.exports = {
   ###
   fetchUserBalance: (args) ->
     new Promise (resolve, reject) ->
-      users = "SELECT user,deposit,NULL AS status FROM `users` WHERE `uid` =" + args[0]
-      usersblock =  "SELECT user,deposit,'otkl' as status FROM `usersblok` WHERE `uid` =" + args[0]
-      usersdel = "SELECT user,deposit,'del' as status FROM `usersdel` WHERE `uid` =" + args[0]
+      users = "SELECT user,deposit,NULL AS status,`packets`.`packet` FROM `users` left join `packets` on(`users`.`gid` = `packets`.`gid`) WHERE `uid`=" + args[0]
+      usersblock =  "SELECT user,deposit,'otkl' as status,`packets`.`packet` FROM `usersblok` left join `packets` on(`usersblok`.`gid` = `packets`.`gid`) WHERE `uid`=" + args[0]
+      usersdel = "SELECT user,deposit,'del' as status,`packets`.`packet` FROM `usersdel` left join `packets` on(`usersdel`.`gid` = `packets`.`gid`) WHERE `uid`=" + args[0]
       db.query(users+ ' UNION ' +usersblock+ ' UNION ' +usersdel)
         .then (data) ->
           if _.isEmpty(data)
@@ -150,7 +150,7 @@ module.exports = {
           else status = ''
 
           # RESULT COMPILE
-          result = status+ 'UID: *' +args[0]+ '*\nЛогин: *' +user.user+ '*\nБаланс до: *' +deposit+ ' руб*\nБаланс после: *' +sum+ '* руб'
+          result = status+ 'UID: *' +args[0]+ '*\nЛогин: *' +user.user+ '*\nТариф: *' +user.packet+ '*\nБаланс до: *' +deposit+ ' руб*\nБаланс после: *' +sum+ '* руб'
           array = [
             {
               text: 'Выполнить'
@@ -179,13 +179,13 @@ module.exports = {
   fetchUser: (args) ->
     new Promise (resolve, reject) ->
       fio = '%' +args+ '%'
-      users = "SELECT `users`.`uid`,`users`.`user`,`users`.`deposit`,NULL AS status,`users`.`fio`,
+      users = "SELECT `users`.`uid`,`users`.`user`,`users`.`deposit`,NULL AS status,`users`.`fio`,`packets`.`packet`,
         if(`inetonline`.`uid`,'ON','OFF') AS `online`,
         if(`inetonline`.`uid`,NULL,(SELECT `acctstoptime` FROM `radacct` WHERE `radacct`.`uid` = `users`.`uid` ORDER BY `radacctid` DESC LIMIT 1)) AS `acctstoptime`
-        FROM `users` left join `inetonline` on(`users`.`uid` = `inetonline`.`uid`)
-        WHERE `users`.`uid`= '" +args+ "' OR `users`.`user` LIKE '" +args+ "' OR `users`.`fio` LIKE '" +fio+ "' LIMIT 1"
-      usersblock = "SELECT uid,user,deposit,'otkl' as status,fio,'OFF' AS `online`,NULL AS `acctstoptime` FROM `usersblok` WHERE `uid`= '" +args+ "' OR `user` LIKE '" +args+ "' OR `fio` LIKE '"+fio+ "' LIMIT 1"
-      usersdel = "SELECT uid,user,deposit,'del' as status,fio,'OFF' AS `online`,NULL AS `acctstoptime` FROM `usersdel` WHERE `uid`= '" +args+ "' OR `user` LIKE '" +args+ "' OR `fio` LIKE '" +fio+ "' LIMIT 1"
+        FROM `users` left join `inetonline` on(`users`.`uid` = `inetonline`.`uid`) left join `packets` on(`users`.`gid` = `packets`.`gid`)
+        WHERE `users`.`uid`='" +args+ "' OR `users`.`user` LIKE '" +args+ "' OR `users`.`fio` LIKE '" +fio+ "' LIMIT 1"
+      usersblock = "SELECT uid,user,deposit,'otkl' as status,fio,`packets`.`packet`,'OFF' AS `online`,NULL AS `acctstoptime` FROM `usersblok` left join `packets` on(`usersblok`.`gid` = `packets`.`gid`) WHERE `uid`='" +args+ "' OR `user` LIKE '" +args+ "' OR `fio` LIKE '"+fio+ "' LIMIT 1"
+      usersdel = "SELECT uid,user,deposit,'del' as status,fio,`packets`.`packet`,'OFF' AS `online`,NULL AS `acctstoptime` FROM `usersdel` left join `packets` on(`usersdel`.`gid` = `packets`.`gid`) WHERE `uid`='" +args+ "' OR `user` LIKE '" +args+ "' OR `fio` LIKE '" +fio+ "' LIMIT 1"
       db.query(users+ ' UNION ' +usersblock+ ' UNION ' +usersdel)
         .then (data) ->
           if _.isEmpty(data)
@@ -217,11 +217,12 @@ module.exports = {
           else connect = ''
 
           # RESULT COMPILE
-          result = 'UID: *' +user.uid+ '*\n' +status+ 'Логин: *' +user.user+ '*' +fio+ '\nБаланс: *' +deposit+ ' руб*\nОнлайн: *' +online+ '*' +connect
+          result = 'UID: *' +user.uid+ '*\n' +status+ 'Логин: *' +user.user+ '*' +fio+ '\nТариф: *' +user.packet+ '*\nБаланс: *' +deposit+ ' руб*\nОнлайн: *' +online+ '*' +connect
 
           debug 'fetchUser:GOOD'
           resolve(
             result: result
+            buttons: []
           )
         .catch (err) ->
           debug 'fetchUser:ERROR '+err
