@@ -12,7 +12,11 @@ module.exports = {
     # @param {number} ChatID
     ###
     getToken: (ChatID) ->
-      memory.get(ChatID) or null
+      token = memory.get(ChatID)
+      if token
+        memory.ttl ChatID, config.tokenTTL
+        return token
+      return null
 
     ###
     # Save Token User
@@ -21,11 +25,4 @@ module.exports = {
     ###
     setToken: (ChatID,token) ->
       memory.set ChatID, token, config.tokenTTL
-
-    ###
-    # Update TOKEN TTL
-    # @param {number} ChatID
-    ###
-    updTokenTTL: (ChatID) ->
-      memory.ttl ChatID, config.tokenTTL
   }

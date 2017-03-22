@@ -25,9 +25,12 @@ module.exports = (ChatID) ->
     self = this
     Promise.resolve()
       .then ->
-        if self.accessToken
-          memory.updTokenTTL ChatID
-          return self.accessToken
+        token = memory.getToken ChatID
+        if token
+          self.accessToken = token
+          return token
+
+        self.accessToken = null
         _fetchAccessToken()
 
   ###
@@ -105,7 +108,7 @@ module.exports = (ChatID) ->
           console.log error
           return reject()
 
-        # Если получен куки токен сохраняем и запрещем парсить
+        # Если получен токен сохраняем и отвечаем
         if response.headers['set-cookie']
           self.accessToken = response.headers['set-cookie'][0].replace('; path=/', '')
           return resolve()
@@ -124,7 +127,7 @@ module.exports = (ChatID) ->
 
   {
     # Token for Authorize
-    accessToken: memory.getToken ChatID
+    accessToken: null
 
     ###
     # Pay User

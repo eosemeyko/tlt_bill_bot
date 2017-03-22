@@ -15,8 +15,7 @@ module.exports = {
       billing(userID).PaymentUser(args[0],args[1])
         .then (data) ->
           if data and data.ok[0] == '1'
-            deposit = Math.floor(data.deposit[0])
-            resolve 'Статус: *Успешно*\nUID: *' +args[0]+ '*\nБаланс: *' +deposit+ ' руб*'
+            resolve 'UID: *' +args[0]+ '*\nПополнение на сумму *' +args[1]+ '*\nСтатус: *Успешно*'
           else reject()
         .catch (err) ->
           reject err
