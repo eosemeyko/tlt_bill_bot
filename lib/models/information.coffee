@@ -223,7 +223,7 @@ module.exports = {
       fio = '%' +args+ '%'
 
       # USERS TABLE
-      users = "SELECT `users`.`uid`,`users`.`user`,`users`.`password`,`users`.`deposit`,`users`.`local_ip`,NULL AS status,`users`.`fio`,`packets`.`packet`,
+      users = "SELECT `users`.`uid`,`users`.`user`,`users`.`password`,`users`.`deposit`,`users`.`credit`,`users`.`local_ip`,NULL AS status,`users`.`fio`,`packets`.`packet`,
         if(`inetonline`.`uid`,'ON','OFF') AS `online`,
         if(`inetonline`.`uid`,NULL,(SELECT `acctstoptime` FROM `radacct` WHERE `radacct`.`uid` = `users`.`uid` ORDER BY `radacctid` DESC LIMIT 1)) AS `acctstoptime`,
         (SELECT `lane` FROM `lanes` WHERE `lanes`.`laneid` = `lanes_houses`.`laneid`) AS `lane`,`lanes_houses`.`house`, `users`.`app`
@@ -231,13 +231,13 @@ module.exports = {
         WHERE `users`.`uid`='" +args+ "' OR `users`.`user` LIKE '" +args+ "' OR `users`.`fio` LIKE '" +fio+ "' LIMIT 1"
 
       # USERS BLOCK TABLE
-      users_block = "SELECT uid,user,password,deposit,local_ip,'otkl' as status,fio,`packets`.`packet`,'OFF' AS `online`,NULL AS `acctstoptime`,
+      users_block = "SELECT uid,user,password,deposit,credit,local_ip,'otkl' as status,fio,`packets`.`packet`,'OFF' AS `online`,NULL AS `acctstoptime`,
         (SELECT `lane` FROM `lanes` WHERE `lanes`.`laneid` = `lanes_houses`.`laneid`) AS `lane`,`lanes_houses`.`house`, app
         FROM `usersblok` left join `packets` on(`usersblok`.`gid` = `packets`.`gid`) left join `lanes_houses` on(`usersblok`.`houseid` = `lanes_houses`.`houseid`)
         WHERE `uid`='" +args+ "' OR `user` LIKE '" +args+ "' OR `fio` LIKE '"+fio+ "' LIMIT 1"
 
       # USERS DELETE TABLE
-      users_del = "SELECT uid,user,password,deposit,local_ip,'del' as status,fio,`packets`.`packet`,'OFF' AS `online`,NULL AS `acctstoptime`,
+      users_del = "SELECT uid,user,password,deposit,credit,local_ip,'del' as status,fio,`packets`.`packet`,'OFF' AS `online`,NULL AS `acctstoptime`,
         (SELECT `lane` FROM `lanes` WHERE `lanes`.`laneid` = `lanes_houses`.`laneid`) AS `lane`,`lanes_houses`.`house`, app
         FROM `usersdel` left join `packets` on(`usersdel`.`gid` = `packets`.`gid`) left join `lanes_houses` on(`usersdel`.`houseid` = `lanes_houses`.`houseid`)
         WHERE `uid`='" +args+ "' OR `user` LIKE '" +args+ "' OR `fio` LIKE '" +fio+ "' LIMIT 1"
@@ -248,8 +248,11 @@ module.exports = {
           if _.isEmpty(data)
             debug 'fetchUser:isEmpty'
             return resolve()
+
+          # PARAMS
           user = data[0]
           deposit = Math.floor(user.deposit)
+          credit = Math.floor(user.credit)
 
           # STATUS
           if user.status
@@ -279,7 +282,7 @@ module.exports = {
           else connect = ''
 
           # RESULT COMPILE
-          result = 'UID: *' +user.uid+ '*\n' +status+ 'Логин: *' +user.user+ '*\nПароль: *' +user.password+ '*' +fio+house+ '\n\nТариф: *' +user.packet+ '*\nБаланс: *' +deposit+ ' руб*\n\nОнлайн: *' +online+ '*' +connect+ '\nIP адрес: *' +user.local_ip+ '*'
+          result = 'UID: *' +user.uid+ '*\n' +status+ 'Логин: *' +user.user+ '*\nПароль: *' +user.password+ '*' +fio+house+ '\n\nТариф: *' +user.packet+ '*\nБаланс: *' +deposit+ '* руб\nКредит: *' +credit+ '* руб\n\nОнлайн: *' +online+ '*' +connect+ '\nIP адрес: *' +user.local_ip+ '*'
 
           debug 'fetchUser:GOOD'
           resolve(
