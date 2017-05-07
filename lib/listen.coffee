@@ -49,13 +49,13 @@ module.exports = (bot) ->
         return bot.sendMessage chatId, 'Принимаю только числа!'
 
       # Only +
-      if args[1] and args[1] < 0
+      if args[1] < 0
         return bot.sendMessage chatId, 'Сумма только положительная!'
 
-      # Push Mathematical symbol to arguments
-      args.push 'payment'
+      # Push Action to arguments
+      args[2] = 'payment'
 
-      GetInfo bot, chatId, 'fetchUserBalance', 'Пополнение на сумму *'+args[1]+ '*р\n', args
+      GetInfo bot, chatId, 'ActionUserBalance', 'Пополнение на сумму *'+args[1]+ '* р\n', args
     return
 
   # Pull Balance User  [UID, sum]
@@ -74,13 +74,50 @@ module.exports = (bot) ->
         return bot.sendMessage chatId, 'Принимаю только числа!'
 
       # Only +
-      if args[1] and args[1] < 0
+      if args[1] < 0
         return bot.sendMessage chatId, 'Сумма только положительная!'
 
-      # Push Mathematical symbol to arguments
-      args.push 'pull'
+      # Push Action to arguments
+      args[2] = 'pull'
 
-      GetInfo bot, chatId, 'fetchUserBalance', 'Вычесть из баланса *'+args[1]+ '*р\n', args
+      GetInfo bot, chatId, 'ActionUserBalance', 'Вычесть из баланса *'+args[1]+ '* р\n', args
+    return
+
+  # Credit User  [UID, sum || вкл|on]
+  bot.onText /\/кр (.+)/, (msg, match) ->
+    chatId = msg.chat.id
+
+    if checkUser chatId
+      args = match[1].split(' ')
+
+      # Only two arguments
+      if args.length < 2
+        return bot.sendMessage chatId, 'Нехватает значений!'
+
+      # UID only number
+      if _.isNaN(Number(args[0]))
+        return bot.sendMessage chatId, 'UID принимаю только число!'
+
+      # Проверка второго значения
+      if _.isNaN(Number(args[1]))
+        # Если не цифра - проверяем параметр
+        if args[1] == 'вкл' or args[1] == 'on'
+          text = 'Активация кредита\n'
+          args[2] = 'credit_auto'
+        else if args[1] == 'выкл' or args[1] == 'off'
+          text = 'Отключение кредита\n'
+          args[2] = 'credit_off'
+        else return bot.sendMessage chatId, 'Второе значение непонятно!'
+        # Отправляем команду
+        GetInfo bot, chatId, 'ActionUserBalance', text, args
+      else
+        # Если цифра = сумма кредита
+        # Only +
+        if args[1] < 0
+          return bot.sendMessage chatId, 'Сумма только положительная!'
+        # Отправляем команду по стандарту
+        args[2] = 'credit_sum'
+        GetInfo bot, chatId, 'ActionUserBalance', 'Активация кредита на сумму *'+args[1]+ '* р\n', args
     return
 
   # Search User [VALUE]

@@ -29,3 +29,10 @@ module.exports =
     next:
       req: actions.PullUserBalance
       end: true
+
+  # Credit User
+  credit:
+    args: 2
+    next:
+      req: actions.CreditUser
+      end: true

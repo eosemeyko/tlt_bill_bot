@@ -125,27 +125,30 @@ module.exports = {
       return
 
   ###
-  # Fetch User Balance
+  # Action User Balance
   # @param {Array} args - Arguments
   # @return {Promise}
   ###
-  fetchUserBalance: (args) ->
+  ActionUserBalance: (args) ->
     new Promise (resolve, reject) ->
-      users = "SELECT user,deposit,NULL AS status,`packets`.`packet` FROM `users` left join `packets` on(`users`.`gid` = `packets`.`gid`) WHERE `uid`=" + args[0]
-      usersblock =  "SELECT user,deposit,'otkl' as status,`packets`.`packet` FROM `usersblok` left join `packets` on(`usersblok`.`gid` = `packets`.`gid`) WHERE `uid`=" + args[0]
-      usersdel = "SELECT user,deposit,'del' as status,`packets`.`packet` FROM `usersdel` left join `packets` on(`usersdel`.`gid` = `packets`.`gid`) WHERE `uid`=" + args[0]
-      db.query(users+ ' UNION ' +usersblock+ ' UNION ' +usersdel)
+      users = "SELECT user,deposit,credit,NULL AS status,`packets`.`packet`,`packets`.`fixed`,`packets`.`fixed_cost` FROM `users` left join `packets` on(`users`.`gid` = `packets`.`gid`) WHERE `uid`=" + args[0]
+      users_block =  "SELECT user,deposit,credit,'otkl' as status,`packets`.`packet`,`packets`.`fixed`,`packets`.`fixed_cost` FROM `usersblok` left join `packets` on(`usersblok`.`gid` = `packets`.`gid`) WHERE `uid`=" + args[0]
+      users_del = "SELECT user,deposit,credit,'del' as status,`packets`.`packet`,`packets`.`fixed`,`packets`.`fixed_cost` FROM `usersdel` left join `packets` on(`usersdel`.`gid` = `packets`.`gid`) WHERE `uid`=" + args[0]
+      db.query(users+ ' UNION ' +users_block+ ' UNION ' +users_del)
         .then (data) ->
           if _.isEmpty(data)
-            debug 'fetchUserBalance:isEmpty'
+            debug 'ActionUserBalance:isEmpty'
             return resolve()
 
+          # PARAMS
           user = data[0]
+          UID = args[0]
+          SUM = args[1]
+          CMD = args[2]
           deposit = Math.floor(user.deposit)
-          if args[2] == 'payment'
-            sum = parseInt(deposit) + parseInt(args[1])
-          else
-            sum = parseInt(deposit) - parseInt(args[1])
+          credit = Math.floor(user.credit)
+          credit_after = ''
+          balance_after = ''
 
           # STATUS
           if user.status
@@ -153,25 +156,60 @@ module.exports = {
             status = 'Статус: *' +text + '*\n'
           else status = ''
 
+          # Payment or pull balance
+          if CMD == 'payment' or CMD == 'pull'
+            # PAYMENT
+            if CMD == 'payment'
+              sum_after = parseInt(deposit) + parseInt(SUM)
+            else
+              sum_after = parseInt(deposit) - parseInt(SUM)
+            balance_after = '\nБаланс после: *' +sum_after+ '* руб'
+          else
+            # CREDIT
+            if CMD == 'credit_auto'
+              # Нужно подсчитать автоматически кредитную сумму
+              # Выводим типы тарифов
+              fxd = user.fixed
+              # Тариф без снятия, выкидываем отказ
+              if fxd == 0
+                return reject()
+              if fxd == 1 or fxd == 7 or fxd == 10
+                # Тарифы с посуточной оплатой
+                SUM = Math.floor(user.fixed_cost * 30)
+              else if fxd == 8 or fxd == 9 or fxd == 11
+                # Тарифы с месячной оплатой
+                SUM = Math.floor(user.fixed_cost)
+
+            # Change credit after result
+            credit_after = '\nКредит после: *' +SUM+ '* руб'
+
+            # Credit Disable User
+            if CMD == 'credit_off'
+              SUM = 'off'
+              credit_after = '\nКредит после: *0* руб'
+
+          # Edit command to credit
+            CMD = 'credit'
+
           # RESULT COMPILE
-          result = status+ 'UID: *' +args[0]+ '*\nЛогин: *' +user.user+ '*\nТариф: *' +user.packet+ '*\nБаланс до: *' +deposit+ ' руб*\nБаланс после: *' +sum+ '* руб'
+          result = status+ 'UID: *' +UID+ '*\nЛогин: *' +user.user+ '*\nТариф: *' +user.packet+ '*\nБаланс: *' +deposit+ '* руб\nКредит: *' +credit+ '* руб' + balance_after + credit_after
           array = [
             {
               text: 'Выполнить'
-              callback_data: args[2]+ ' ' +args[0]+ ' ' +args[1]
+              callback_data: CMD+ ' ' +UID+ ' ' +SUM
             }
             {
               text: 'Отменить'
               callback_data: 'cancel'
             }
           ]
-          debug 'fetchUserBalance:GOOD'
+          debug 'ActionUserBalance:GOOD'
           resolve(
             result: result
             buttons: array
           )
         .catch (err) ->
-          debug 'fetchUserBalance:ERROR '+err
+          debug 'ActionUserBalance:ERROR '+err
           reject err
       return
 

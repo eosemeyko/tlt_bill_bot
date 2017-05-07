@@ -155,4 +155,20 @@ module.exports = (ChatID) ->
           prim2: 'Оператором'
           bughtypeid: 7
         })
+
+    ###
+    # Credit User
+    # @param uid
+    # @param sum or off
+    ###
+    CreditUser: (uid,sum) ->
+      if sum == 'off'
+        url = '/ajax/users/creditnullfl'
+      else
+        url = '/ajax/users/creditfl'
+      _ensureAccessToken().then ->
+        _sendRequest('POST', url, {
+          uid: uid
+          credit: sum
+        })
   }
