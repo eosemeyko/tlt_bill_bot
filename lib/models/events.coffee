@@ -16,9 +16,16 @@ module.exports =
       req: information.fetchHouseUsers
       end: true
 
-  # Payment User
+  # Payment Balance User
   payment:
     args: 2
     next:
-      req: actions.PaymentUser
+      req: actions.PaymentUserBalance
+      end: true
+
+  # Pull Balance User
+  pull:
+    args: 2
+    next:
+      req: actions.PullUserBalance
       end: true

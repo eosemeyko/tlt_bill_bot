@@ -130,15 +130,29 @@ module.exports = (ChatID) ->
     accessToken: null
 
     ###
-    # Pay User
+    # Pay User Balance
     # @param uid
     # @param deposit
     ###
-    PaymentUser: (uid,deposit) ->
+    PaymentUserBalance: (uid,deposit) ->
      _ensureAccessToken().then ->
        _sendRequest('POST', '/ajax/users/paymentflex', {
          uid: uid
          deposit: deposit
          prim2: 'Оплачено'
       })
+
+    ###
+    # Pull User Balance
+    # @param uid
+    # @param deposit
+    ###
+    PullUserBalance: (uid,deposit) ->
+      _ensureAccessToken().then ->
+        _sendRequest('POST', '/ajax/users/paymentdoflex', {
+          uid: uid
+          deposit: deposit
+          prim2: 'Оператором'
+          bughtypeid: 7
+        })
   }

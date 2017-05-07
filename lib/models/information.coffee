@@ -125,7 +125,7 @@ module.exports = {
       return
 
   ###
-  # Fetch User Payment
+  # Fetch User Balance
   # @param {Array} args - Arguments
   # @return {Promise}
   ###
@@ -142,7 +142,11 @@ module.exports = {
 
           user = data[0]
           deposit = Math.floor(user.deposit)
-          sum = parseInt(deposit) + parseInt(args[1])
+          if args[2] == 'payment'
+            sum = parseInt(deposit) + parseInt(args[1])
+          else
+            sum = parseInt(deposit) - parseInt(args[1])
+
           # STATUS
           if user.status
             text = if user.status == 'otkl' then 'Отключен' else 'Удален'
@@ -154,7 +158,7 @@ module.exports = {
           array = [
             {
               text: 'Выполнить'
-              callback_data: 'payment ' +args[0]+ ' ' +args[1]
+              callback_data: args[2]+ ' ' +args[0]+ ' ' +args[1]
             }
             {
               text: 'Отменить'

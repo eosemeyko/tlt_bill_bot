@@ -52,7 +52,35 @@ module.exports = (bot) ->
       if args[1] and args[1] < 0
         return bot.sendMessage chatId, 'Сумма только положительная!'
 
-      GetInfo bot, chatId, 'fetchUserBalance', 'Пополнение на сумму *'+args[1]+ '*\n', args
+      # Push Mathematical symbol to arguments
+      args.push 'payment'
+
+      GetInfo bot, chatId, 'fetchUserBalance', 'Пополнение на сумму *'+args[1]+ '*р\n', args
+    return
+
+  # Pull Balance User  [UID, sum]
+  bot.onText /\/сн (.+)/, (msg, match) ->
+    chatId = msg.chat.id
+
+    if checkUser chatId
+      args = match[1].split(' ')
+
+      # Only two arguments
+      if args.length < 2
+        return bot.sendMessage chatId, 'Нехватает значений!'
+
+      # Только числовые значения
+      if _.isNaN(Number(args[0])) or _.isNaN(Number(args[1]))
+        return bot.sendMessage chatId, 'Принимаю только числа!'
+
+      # Only +
+      if args[1] and args[1] < 0
+        return bot.sendMessage chatId, 'Сумма только положительная!'
+
+      # Push Mathematical symbol to arguments
+      args.push 'pull'
+
+      GetInfo bot, chatId, 'fetchUserBalance', 'Вычесть из баланса *'+args[1]+ '*р\n', args
     return
 
   # Search User [VALUE]
