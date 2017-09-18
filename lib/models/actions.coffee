@@ -1,4 +1,3 @@
-Promise = require 'promise'
 billing = require '../middleware/billing'
 
 module.exports = {

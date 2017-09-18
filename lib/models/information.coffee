@@ -1,6 +1,5 @@
 _ = require 'lodash'
 async = require 'async'
-Promise = require 'promise'
 db = require '../middleware/mysql'
 billing = require '../middleware/billing'
 dateFormat = require 'dateformat'

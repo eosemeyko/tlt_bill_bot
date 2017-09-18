@@ -1,4 +1,3 @@
-Promise = require 'promise'
 db = require '../middleware/mysql'
 
 module.exports = {

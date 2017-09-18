@@ -1,7 +1,6 @@
 _ = require 'lodash'
 debug = require('debug')('tltbill_bot:mysql')
 config = require 'config'
-Promise = require 'promise'
 mysql = require 'mysql'
 db = mysql.createPool config.db
 

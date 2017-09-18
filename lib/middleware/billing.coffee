@@ -3,7 +3,6 @@ debug = require('debug')('tltbill_bot:billing')
 config = require 'config'
 request = require 'request'
 urlJoin = require 'url-join'
-Promise = require 'promise'
 xml2js = require 'xml2js'
 memory = require './memory'
 auth = require '../models/authorize'
