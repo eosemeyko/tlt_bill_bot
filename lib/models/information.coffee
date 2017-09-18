@@ -79,9 +79,8 @@ module.exports = {
       left join `inetonline` on(`users`.`uid` = `inetonline`.`uid`)
       WHERE `houseid` =" + house_id[0]
       users_block = "SELECT `uid`,`user`,`fio`,`deposit`,`credit`,'otkl' AS `status`,NULL AS `online`,NULL AS `acctstoptime` FROM `usersblok` WHERE `houseid` =" + house_id[0]
-      users_del = "SELECT `uid`,`user`,`fio`,`deposit`,`credit`,'del' AS `status`,NULL AS `online`,NULL AS `acctstoptime` FROM `usersdel` WHERE `houseid` =" + house_id[0]
 
-      db.query(users + ' UNION ' + users_block + ' UNION ' + users_del)
+      db.query(users + ' UNION ' + users_block)
         .then (data) ->
           if _.isEmpty(data)
             debug 'fetchHouseUsers:isEmpty'
