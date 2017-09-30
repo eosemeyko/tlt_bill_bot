@@ -1,9 +1,13 @@
-# JetBrains IDE
-.idea/
+# IDE
+.idea
+.vscode
 
-#NPM
+# NPM
 /node_modules
 npm-debug.log*
+
+# Config
+config/default.js
 
 # Src Code
 /src
