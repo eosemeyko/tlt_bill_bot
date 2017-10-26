@@ -3,7 +3,6 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "prestart": "npm install && node ./node_modules/gulp/bin/gulp.js",
     "start": "node bin/app"
   },
   "dependencies": {
@@ -18,9 +17,5 @@
     "request": "^2.79.0",
     "url-join": "^1.1.0",
     "xml2js": "^0.4.19"
-  },
-  "devDependencies": {
-    "gulp": "^3.9.1",
-    "gulp-coffee": "^2.3.3"
   }
 }
