@@ -1,4 +1,4 @@
-const billing = require('../middleware/billing');
+const billing = require('../services/billing');
 
 module.exports = {
     /**
